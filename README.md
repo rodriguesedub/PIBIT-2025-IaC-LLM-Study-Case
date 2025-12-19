@@ -1,52 +1,71 @@
-# Geração de Políticas de Segurança em IaC usando LLM
+Geração de Políticas de Segurança em IaC usando LLM
 
-Este repositório contém os artefatos, códigos e evidências do Estudo de Caso desenvolvido para o projeto de Iniciação Tecnológica (PIBIT/PUCPR), focado na automação de governança em Nuvem via Inteligência Artificial.
+Este repositório contém os artefatos, códigos e evidências do Estudo de Caso desenvolvido para o projeto de Iniciação Tecnológica (PIBIT/PUCPR), focado na automação de governança em Nuvem via Inteligência Artificial Generativa.
 
-**Aluno:** Eduardo Rodrigues  
-**Orientador:** Altair Olivo Santin  
-**Período:** 2025-2026
+Aluno: Eduardo Rodrigues
 
-## 🎯 Objetivo do Estudo de Caso
-Demonstrar e avaliar a eficácia de Large Language Models (LLMs) na geração automática de políticas de segurança **Open Policy Agent (OPA)** para validar infraestruturas **Terraform**. O estudo compara duas abordagens de Engenharia de Prompt:
-1.  **Zero-Shot:** Geração direta.
-2.  **RCI (Recursive Criticism and Improvement):** Geração com ciclo de autocrítica.
+Orientador: Altair Olivo Santin
 
-## 🛠️ Tecnologias e Versões
-Para garantir a reprodutibilidade dos experimentos, este ambiente utiliza versões específicas que impactam a sintaxe do código (especialmente OPA Rego v1).
+Instituição: Pontifícia Universidade Católica do Paraná (PUCPR)
 
-* **SO:** Ubuntu 24.04 LTS
-* **Terraform:** v1.14.2
-* **LocalStack:** Simulador de AWS local (via Docker)
-* **Tflocal:** Wrapper para facilitar o uso do LocalStack
-* **Open Policy Agent (OPA):** v1.11.0 (Requer sintaxe Rego v1)
-* **LLM:** GPT-4o (OpenAI)
+Vigência: 2025-2026
 
-## 📂 Estrutura do Projeto
-```text.
+🎯 Objetivo do Estudo de Caso
+
+Investigar a "lacuna de implantabilidade" (deployability gap) na geração de código de segurança por LLMs. O estudo avalia a eficácia do ChatGPT-4o na geração automática de políticas Open Policy Agent (OPA) para validar infraestruturas Terraform, comparando duas estratégias de Engenharia de Prompt:
+
+Zero-Shot: Geração direta sem exemplos ou refinamento.
+
+RCI (Recursive Criticism and Improvement): Geração iterativa com ciclo de autocrítica.
+
+🛠️ Tecnologias e Versões
+
+A reprodutibilidade deste experimento depende estritamente das versões abaixo, devido a mudanças de sintaxe na linguagem Rego (OPA v1.0+).
+
+Sistema Operacional: Ubuntu 24.04 LTS
+
+Terraform: v1.14.2
+
+LocalStack: Simulador de AWS (Docker)
+
+Tflocal: Wrapper python para integração Terraform-LocalStack
+
+Open Policy Agent (OPA): v1.11.0 (Requer sintaxe Rego v1 com palavras-chave if e contains)
+
+LLM: GPT-4o (OpenAI - via Web Interface)
+
+📂 Estrutura do Projeto
+
+.
 ├── infra/                  # Código Terraform (Cenário Vulnerável)
-│   └── main.tf             # Criação de S3 Bucket sem bloqueio de acesso público
+│   └── main.tf             # Definição de S3 Bucket sem bloqueio de acesso público
 ├── policies/               # Políticas geradas pelo LLM
-│   ├── s3_policy_Zero_Shot.rego  # Falha (Erro de sintaxe/versão)
+│   ├── s3_policy_Zero-Shot.rego  # Falha (Erro de sintaxe/versão)
 │   └── s3_policy_RCI.rego        # Sucesso (Sintaxe corrigida e validação robusta)
-├── evidence/               # Logs e evidências de execução
-│   ├── tfplan.json         # Plano de execução convertido para JSON
-│   └── logs_opa.txt        # Saída da validação
+├── evidence/               # Logs, PDFs das conversas e screenshots
+├── logs/                   # Arquivos de saída técnica
+│   └── tfplan.json         # Plano de execução convertido para JSON (Input do OPA)
+├── prompts/                # Documentação dos Prompts utilizados
+│   └── prompts.md
 ├── install.sh              # Script de configuração do ambiente
 └── README.md
-🚀 Como Executar
-1. Preparação do Ambiente
-Execute o script de instalação para configurar o tflocal, opa e dependências:
 
-Bash
+
+🚀 Como Executar o Experimento
+
+1. Preparação do Ambiente
+
+Execute o script de instalação para configurar o tflocal, opa e dependências:
 
 chmod +x install.sh
 ./install.sh
-2. Subindo a Infraestrutura (Simulada)
-Inicie o LocalStack e gere o plano do Terraform:
 
-Bash
 
-# Iniciar LocalStack (se via docker-compose ou desktop)
+2. Gerando o Plano de Infraestrutura (Cenário Vulnerável)
+
+Utilizamos o LocalStack para simular a criação de recursos sem custos.
+
+# Iniciar LocalStack (caso não esteja rodando via Docker Desktop)
 docker start localstack_main
 
 # Inicializar e planejar a infraestrutura
@@ -54,22 +73,34 @@ cd infra
 tflocal init
 tflocal plan -out tfplan.binary
 
-# Converter o plano para JSON (Formato lido pelo OPA)
-tflocal show -json tfplan.binary > ../evidence/tfplan.json
+# Converter o plano para JSON (Formato exigido pelo OPA)
+# O arquivo será salvo na pasta logs/ para auditoria
+tflocal show -json tfplan.binary > ../logs/tfplan.json
+cd ..
+
+
 3. Executando a Validação de Segurança (OPA)
-Teste 1: Abordagem Zero-Shot (Falha Esperada) O código gerado sem refinamento utiliza sintaxe depreciada incompatível com OPA v1.
 
-Bash
+Cenário A: Abordagem Zero-Shot (Falha Esperada)
+O código gerado diretamente pelo LLM utiliza sintaxe depreciada (Rego v0), incompatível com o binário moderno do OPA.
 
-opa eval --format pretty --input evidence/tfplan.json --data policies/s3_policy_Zero_Shot.rego "data.terraform.deny"
-# Resultado esperado: rego_parse_error (if keyword is required)
-Teste 2: Abordagem RCI (Sucesso) O código refinado corrige a sintaxe e trata valores nulos.
+opa eval --format pretty --input logs/tfplan.json --data policies/s3_policy_Zero-Shot.rego "data.terraform.deny"
 
-Bash
 
-opa eval --format pretty --input evidence/tfplan.json --data policies/s3_policy_RCI.rego "data.terraform.deny"
-# Resultado esperado: Mensagem de bloqueio de criação do bucket inseguro.
+Resultado: Erro de parsing (rego_parse_error: if keyword is required before rule body).
+
+Cenário B: Abordagem RCI (Sucesso)
+O código refinado pelo próprio LLM corrige a sintaxe e trata valores nulos em resource_changes.
+
+opa eval --format pretty --input logs/tfplan.json --data policies/s3_policy_RCI.rego "data.terraform.deny"
+
+
+Resultado: Sucesso. O output JSON deve conter a mensagem de negação, indicando que a política detectou corretamente a vulnerabilidade.
+
 📊 Principais Resultados
-A abordagem Zero-Shot falhou ao gerar código compatível com a versão moderna do OPA (1.11.0+), ignorando palavras-chave obrigatórias como if.
 
-A abordagem RCI foi capaz de corrigir as alucinações de sintaxe e adicionar robustez lógica (verificação de nulidade em resource_changes), resultando em uma política funcional que detectou corretamente a vulnerabilidade de S3 Público.
+Incompatibilidade de Versão: O GPT-4o, em modo Zero-Shot, tende a gerar código Rego antigo, falhando em ambientes OPA atualizados (v1.11.0+).
+
+Eficácia do RCI: A técnica de Crítica Recursiva permitiu que o modelo "se atualizasse", corrigindo a sintaxe para Rego v1 e adicionando verificações de segurança contra valores nulos (null safety), tornando o artefato implantável.
+
+Projeto desenvolvido para o Programa de Iniciação Científica e Tecnológica da PUCPR.
