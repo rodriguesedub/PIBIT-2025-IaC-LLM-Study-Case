@@ -62,8 +62,10 @@ LLM: GPT-4o (OpenAI - via Web Interface)
 
 Execute o script de instalação para configurar o tflocal, opa e dependências:
 
+```text
 chmod +x install.sh
 ./install.sh
+```
 
 
 2. Gerando o Plano de Infraestrutura (Cenário Vulnerável)
@@ -71,17 +73,23 @@ chmod +x install.sh
 Utilizamos o LocalStack para simular a criação de recursos sem custos.
 
 # Iniciar LocalStack (caso não esteja rodando via Docker Desktop)
+```text
 docker start localstack_main
+```
 
 # Inicializar e planejar a infraestrutura
+```text
 cd infra
 tflocal init
 tflocal plan -out tfplan.binary
+```
 
 # Converter o plano para JSON (Formato exigido pelo OPA)
 # O arquivo será salvo na pasta logs/ para auditoria
+```text
 tflocal show -json tfplan.binary > ../logs/tfplan.json
 cd ..
+```
 
 
 3. Executando a Validação de Segurança (OPA)
@@ -89,16 +97,18 @@ cd ..
 Cenário A: Abordagem Zero-Shot (Falha Esperada)
 O código gerado diretamente pelo LLM utiliza sintaxe depreciada (Rego v0), incompatível com o binário moderno do OPA.
 
+```text
 opa eval --format pretty --input logs/tfplan.json --data policies/s3_policy_Zero-Shot.rego "data.terraform.deny"
-
+```
 
 Resultado: Erro de parsing (rego_parse_error: if keyword is required before rule body).
 
 Cenário B: Abordagem RCI (Sucesso)
 O código refinado pelo próprio LLM corrige a sintaxe e trata valores nulos em resource_changes.
 
+```text
 opa eval --format pretty --input logs/tfplan.json --data policies/s3_policy_RCI.rego "data.terraform.deny"
-
+```
 
 Resultado: Sucesso. O output JSON deve conter a mensagem de negação, indicando que a política detectou corretamente a vulnerabilidade.
 
