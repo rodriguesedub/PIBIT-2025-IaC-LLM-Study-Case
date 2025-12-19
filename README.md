@@ -37,18 +37,24 @@ LLM: GPT-4o (OpenAI - via Web Interface)
 📂 Estrutura do Projeto
 
 .
-├── infra/                  # Código Terraform (Cenário Vulnerável)
-│   └── main.tf             # Definição de S3 Bucket sem bloqueio de acesso público
-├── policies/               # Políticas geradas pelo LLM
-│   ├── s3_policy_Zero-Shot.rego  # Falha (Erro de sintaxe/versão)
-│   └── s3_policy_RCI.rego        # Sucesso (Sintaxe corrigida e validação robusta)
-├── evidence/               # Logs, PDFs das conversas e screenshots
-├── logs/                   # Arquivos de saída técnica
-│   └── tfplan.json         # Plano de execução convertido para JSON (Input do OPA)
-├── prompts/                # Documentação dos Prompts utilizados
+├── infra/                     # Código Terraform (Cenário Vulnerável)
+│   └── main.tf                # Definição de S3 Bucket sem bloqueio de acesso público
+│
+├── policies/                  # Políticas geradas pelo LLM
+│   ├── s3_policy_Zero-Shot.rego  # Falha (erro de sintaxe/versão)
+│   └── s3_policy_RCI.rego        # Sucesso (sintaxe corrigida e validação robusta)
+│
+├── evidence/                  # Logs, PDFs das conversas e screenshots
+│
+├── logs/                      # Arquivos de saída técnica
+│   └── tfplan.json            # Plano Terraform convertido para JSON (input do OPA)
+│
+├── prompts/                   # Documentação dos prompts utilizados
 │   └── prompts.md
-├── install.sh              # Script de configuração do ambiente
-└── README.md
+│
+├── install.sh                 # Script de configuração do ambiente
+└── README.md                  # Documentação do projeto
+
 
 
 🚀 Como Executar o Experimento
