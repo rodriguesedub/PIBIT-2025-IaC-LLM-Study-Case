@@ -35,7 +35,7 @@ Open Policy Agent (OPA): v1.11.0 (Requer sintaxe Rego v1 com palavras-chave if e
 LLM: GPT-4o (OpenAI - via Web Interface)
 
 📂 Estrutura do Projeto
-
+```text
 .
 ├── infra/                     # Código Terraform (Cenário Vulnerável)
 │   └── main.tf                # Definição de S3 Bucket sem bloqueio de acesso público
@@ -54,8 +54,7 @@ LLM: GPT-4o (OpenAI - via Web Interface)
 │
 ├── install.sh                 # Script de configuração do ambiente
 └── README.md                  # Documentação do projeto
-
-
+```
 
 🚀 Como Executar o Experimento
 
