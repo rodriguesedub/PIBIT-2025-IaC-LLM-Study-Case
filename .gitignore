@@ -1,0 +1,21 @@
+# Diretórios locais do Terraform (Binários e plugins)
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+.terraformrc
+terraform.rc
+
+# Arquivos de plano binários (Opcional: manter se quiser como prova, mas idealmente ignora-se)
+# Mas vou sugerir manter o JSON e ignorar o binário que é inútil sem o ambiente exato
+*.binary
+
+# Configurações do VS Code ou Editor (Opcional)
+.vscode/
+.idea/
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
