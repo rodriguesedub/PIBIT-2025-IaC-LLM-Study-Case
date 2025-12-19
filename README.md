@@ -22,8 +22,6 @@ Para garantir a reprodutibilidade dos experimentos, este ambiente utiliza versõ
 * **LLM:** GPT-4o (OpenAI)
 
 ## 📂 Estrutura do Projeto
-
-```text
 .
 ├── infra/                  # Código Terraform (Cenário Vulnerável)
 │   └── main.tf             # Criação de S3 Bucket sem bloqueio de acesso público
