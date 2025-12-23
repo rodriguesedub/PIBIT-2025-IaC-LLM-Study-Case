@@ -74,8 +74,13 @@ Utilizamos o LocalStack para simular a criação de recursos sem custos.
 
 # Iniciar LocalStack (caso não esteja rodando via Docker Desktop)
 ```text
-docker start localstack_main
+docker run -d \
+  --name localstack_main \
+  -p 4566:4566 \
+  -e SERVICES=s3,iam,sts \
+  localstack/localstack
 ```
+
 
 # Inicializar e planejar a infraestrutura
 ```text
