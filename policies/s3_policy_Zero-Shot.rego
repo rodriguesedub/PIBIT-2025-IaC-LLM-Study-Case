@@ -10,36 +10,31 @@ package terraform
 # - ignore_public_acls
 # - restrict_public_buckets
 #
-# Entrada:
-# - input.resource_changes (Terraform plan em JSON)
-#
-# Compatível com OPA 1.11.0 (Rego v1 – sintaxe com `if`)
+# A política lê a estrutura:
+# input.resource_changes (Terraform plan em JSON)
 
-deny[msg] if {
-    # Itera sobre as mudanças de recursos do plano
+deny[msg] {
+    # Itera sobre todas as mudanças de recursos do plano
     rc := input.resource_changes[_]
 
-    # Apenas o recurso desejado
+    # Garante que o recurso é do tipo correto
     rc.type == "aws_s3_bucket_public_access_block"
 
-    # Apenas quando houver criação do recurso
+    # Garante que a ação inclui criação do recurso
     rc.change.actions[_] == "create"
 
-    # Estado final planejado
+    # Obtém o estado final planejado do recurso
     after := rc.change.after
 
-    # Lista dos campos obrigatórios de proteção
-    public_access_flags := [
-        after.block_public_acls,
-        after.block_public_policy,
-        after.ignore_public_acls,
-        after.restrict_public_buckets
-    ]
+    # Verifica se QUALQUER um dos atributos de proteção está false
+    (
+        after.block_public_acls == false
+        or after.block_public_policy == false
+        or after.ignore_public_acls == false
+        or after.restrict_public_buckets == false
+    )
 
-    # Se QUALQUER um deles for false, a política nega
-    public_access_flags[_] == false
-
-    # Mensagem de erro retornada pelo deny
+    # Mensagem de erro clara para o usuário/CI
     msg := sprintf(
         "Criação negada: o recurso %s (%s) possui configurações inseguras de acesso público ao S3. Todos os atributos de Public Access Block devem ser true.",
         [rc.name, rc.address]
