@@ -1,42 +1,46 @@
 package terraform
 
-# Política de negação para aws_s3_bucket_public_access_block
-#
-# Objetivo:
-# Negar a CRIAÇÃO de qualquer recurso aws_s3_bucket_public_access_block
-# quando QUALQUER um dos seguintes atributos estiver definido como false:
-# - block_public_acls
-# - block_public_policy
-# - ignore_public_acls
-# - restrict_public_buckets
-#
-# A política lê a estrutura:
-# input.resource_changes (Terraform plan em JSON)
+# Nega criação (ou replace) de aws_s3_bucket_public_access_block
+# quando qualquer flag de proteção estiver false
 
-deny[msg] {
-    # Itera sobre todas as mudanças de recursos do plano
+deny[msg] if {
     rc := input.resource_changes[_]
 
-    # Garante que o recurso é do tipo correto
+    # Tipo do recurso
     rc.type == "aws_s3_bucket_public_access_block"
 
-    # Garante que a ação inclui criação do recurso
+    # Create ou Replace (create aparece em ambos os casos)
     rc.change.actions[_] == "create"
 
-    # Obtém o estado final planejado do recurso
+    # Garante que existe estado final
+    rc.change.after != null
     after := rc.change.after
 
-    # Verifica se QUALQUER um dos atributos de proteção está false
-    (
-        after.block_public_acls == false
-        or after.block_public_policy == false
-        or after.ignore_public_acls == false
-        or after.restrict_public_buckets == false
-    )
+    # Verifica configurações inseguras
+    insecure_public_access(after)
 
-    # Mensagem de erro clara para o usuário/CI
     msg := sprintf(
-        "Criação negada: o recurso %s (%s) possui configurações inseguras de acesso público ao S3. Todos os atributos de Public Access Block devem ser true.",
-        [rc.name, rc.address]
+        "Criação negada: o recurso %s possui configurações inseguras de acesso público ao S3. Todos os atributos de Public Access Block devem ser true.",
+        [rc.address]
     )
+}
+
+############################
+# Regras auxiliares (Rego v1)
+############################
+
+insecure_public_access(after) if {
+    object.get(after, "block_public_acls", true) == false
+}
+
+insecure_public_access(after) if {
+    object.get(after, "block_public_policy", true) == false
+}
+
+insecure_public_access(after) if {
+    object.get(after, "ignore_public_acls", true) == false
+}
+
+insecure_public_access(after) if {
+    object.get(after, "restrict_public_buckets", true) == false
 }
